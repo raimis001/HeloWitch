@@ -19,14 +19,15 @@
 #define SERVO_PIN 9
 
 // seconds
-int MOVING_TIME = 15;
+int MOVING_TIME = 20;
 int SLEEPING_TIME = 30; 
-int SOUND_TIME = 2;
+int SOUND_TIME = 4;
 
 unsigned long move_start_ms;
 unsigned long blink_start_ms;
 
 int state = 0; 
+int mp3State = 0;
 
 //Classes
 FadeLED* eyesFade;
@@ -51,9 +52,10 @@ void setup() {
   digitalWrite(TEST_PIN, LOW);
 
   mp3Plyer = new MP3Player(MP3_RX, MP3_TX);
-  mp3Plyer->setVolume(5);
+  mp3Plyer->setVolume(25);
 
 
+  //Init sensors
   for(int  i = 0; i < 15; i++) {
     //Serial.print(".");
     delay(950);
@@ -72,19 +74,21 @@ void loop()
 
   if (state == 0) 
   {
+    testBlink->update();
+    if (timeout < SLEEPING_TIME * 1000) 
+    {
+      delay(10);
+      return; 
+    }
+
     if (wakeUp())
     {
       state = 1;
+      mp3State = 0;
       digitalWrite(TEST_PIN, HIGH);
-      
-      //mp3Plyer->reset();
-      delay(100);
-      mp3Plyer->play();
-      delay(100);
       move_start_ms = millis();
       return;
-    }
-    testBlink->update();
+    }    
 
     delay(100);
     return;
@@ -92,24 +96,35 @@ void loop()
 
   updateFades();
   updateServo();
+  if (mp3State == 0 && timeout >= SOUND_TIME * 1000) 
+  {
+    mp3State = 1;
+    mp3Plyer->play();
+    delay(100);
+  }
 
   delay(1);
+
   if (timeout <= MOVING_TIME * 1000) {
     return; 
   }
-  move_start_ms = millis();
+  
 
   if (state == 1)
   {
     state = 2;
+    move_start_ms = millis();
     return;
   }
 
   digitalWrite(TEST_PIN, LOW);
   state = 0;
+  mp3State = 0;
   delay(10);
   blink_start_ms = millis() + 3000;
   testBlink->reset();
+  move_start_ms = millis();
+    
 }
 
 void updateFades() 
