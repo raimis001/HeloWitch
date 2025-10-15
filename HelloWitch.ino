@@ -54,7 +54,6 @@ void setup() {
   mp3Plyer = new MP3Player(MP3_RX, MP3_TX);
   mp3Plyer->setVolume(25);
 
-
   //Init sensors
   for(int  i = 0; i < 15; i++) {
     //Serial.print(".");
